@@ -1,0 +1,16 @@
+name: GrackleUI
+version: '${project.version}'
+main: fr.like.grackle.paper.GrackleUI
+api-version: '1.21'
+description: Interface inventaire pour Grackle (companion du plugin Velocity)
+
+commands:
+  grackle:
+    description: Ouvre le menu principal Grackle
+    aliases: [gk]
+    permission: grackle.ui
+
+permissions:
+  grackle.ui:
+    description: Accès au menu Grackle
+    default: op

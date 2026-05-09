@@ -15,6 +15,7 @@ import fr.like.grackle.command.GrackleCommand;
 import fr.like.grackle.manager.CategoryManager;
 import fr.like.grackle.manager.EventManager;
 import fr.like.grackle.manager.GameManager;
+import fr.like.grackle.messaging.VelocityMessagingHandler;
 import fr.like.grackle.storage.StorageManager;
 import org.slf4j.Logger;
 
@@ -37,6 +38,7 @@ public class Grackle {
     private EventManager eventManager;
     private GameManager gameManager;
     private StorageManager storageManager;
+    private VelocityMessagingHandler messagingHandler;
 
     @Inject
     public Grackle(ProxyServer proxy, Logger logger, @DataDirectory Path dataDirectory) {
@@ -59,6 +61,11 @@ public class Grackle {
         } catch (IOException e) {
             logger.error("Erreur lors du chargement des données : {}", e.getMessage());
         }
+
+        messagingHandler = new VelocityMessagingHandler(proxy, logger, this,
+                eventManager, categoryManager, gameManager);
+        proxy.getChannelRegistrar().register(VelocityMessagingHandler.CHANNEL);
+        proxy.getEventManager().register(this, messagingHandler);
 
         registerCommands();
         logger.info("Grackle initialisé.");
