@@ -1,0 +1,6 @@
+{
+  "id": "grackle",
+  "name": "grackle",
+  "version": "${version}",
+  "main": "fr.like.grackle.Grackle"
+}
