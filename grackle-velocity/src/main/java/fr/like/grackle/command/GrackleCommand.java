@@ -62,9 +62,22 @@ public class GrackleCommand implements SimpleCommand {
 
     private void handleStart(CommandSource src, String[] args) {
         if (args.length < 2) { src.sendMessage(usage("start <eventName>")); return; }
+        String targetServer = null;
+        if (args.length >= 3) targetServer = args[2];
+        String finalTargetServer = targetServer;
         eventManager.get(args[1]).ifPresentOrElse(event -> {
             Game game = gameManager.createGame(event);
             src.sendMessage(Component.text("Partie #" + game.getId() + " créée pour '" + event.getName() + "'.", NamedTextColor.GREEN));
+            if (finalTargetServer != null) {
+                proxy.getServer(finalTargetServer).ifPresentOrElse(reg -> {
+                    if (src instanceof com.velocitypowered.api.proxy.Player p) {
+                        p.createConnectionRequest(reg).connect();
+                    } else {
+                        src.sendMessage(Component.text("Target server specified (" + finalTargetServer + "), but issuer is not a player. No transfer performed.", NamedTextColor.YELLOW));
+                    }
+                }, () -> src.sendMessage(Component.text("Target server '" + finalTargetServer + "' not found.", NamedTextColor.RED)));
+                
+            }
         }, () -> src.sendMessage(Component.text("Event introuvable.", NamedTextColor.RED)));
     }
 

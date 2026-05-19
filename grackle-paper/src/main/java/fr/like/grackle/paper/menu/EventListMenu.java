@@ -77,8 +77,10 @@ public class EventListMenu extends AbstractMenu {
             String eventName = ev.get("name").getAsString();
 
             if (event.isLeftClick()) {
-                plugin.getMessagingHandler().sendAction(player, "START_GAME",
-                        obj -> obj.addProperty("event", eventName));
+                plugin.getMessagingHandler().sendAction(player, "START_GAME", obj -> {
+                    obj.addProperty("event", eventName);
+                    if (ev.has("server") && !ev.get("server").getAsString().isEmpty()) obj.addProperty("targetServer", ev.get("server").getAsString());
+                });
             } else if (event.isRightClick()) {
                 plugin.getMenuManager().openEventDetail(player, ev);
             }

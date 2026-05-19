@@ -18,6 +18,9 @@ public class Event {
 
     private String description;
 
+    // Optional: preferred backend server name to host the event (used as hint)
+    private String server;
+
     private int minParticipants;
     private int maxParticipants;
 
@@ -45,6 +48,9 @@ public class Event {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getServer() { return server; }
+    public void setServer(String server) { this.server = server; }
 
     public int getMinParticipants() { return minParticipants; }
     public void setMinParticipants(int minParticipants) { this.minParticipants = minParticipants; }

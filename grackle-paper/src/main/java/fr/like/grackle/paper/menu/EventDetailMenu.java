@@ -64,8 +64,12 @@ public class EventDetailMenu extends AbstractMenu {
         switch (e.getSlot()) {
             case 11 -> {
                 String eventName = event.get("name").getAsString();
-                plugin.getMessagingHandler().sendAction(player, "START_GAME",
-                        obj -> obj.addProperty("event", eventName));
+                plugin.getMessagingHandler().sendAction(player, "START_GAME", obj -> {
+                    obj.addProperty("event", eventName);
+                    if (event.has("server") && !event.get("server").getAsString().isEmpty()) {
+                        obj.addProperty("targetServer", event.get("server").getAsString());
+                    }
+                });
             }
             case 15 -> plugin.getMenuManager().openEventList(player);
         }

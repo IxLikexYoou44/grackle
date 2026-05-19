@@ -9,8 +9,22 @@ commands:
     description: Ouvre le menu principal Grackle
     aliases: [gk]
     permission: grackle.ui
+  grackle-category:
+    description: Gérer les catégories Grackle (transmis au proxy)
+    aliases: [gkcategory]
+    permission: grackle.category
+  grackle-event:
+    description: Gérer les événements Grackle (transmis au proxy)
+    aliases: [gkevent]
+    permission: grackle.event
 
 permissions:
   grackle.ui:
     description: Accès au menu Grackle
+    default: op
+  grackle.category:
+    description: Permission pour créer/supprimer des catégories
+    default: op
+  grackle.event:
+    description: Permission pour créer/supprimer des events
     default: op

@@ -116,6 +116,7 @@ public class StorageManager {
             int maxParticipants,
             String category,
             String description,
+            String server,
             RewardStrategy reward,
             TeamConfigDto teamConfig
     ) {
@@ -134,6 +135,7 @@ public class StorageManager {
                     e.getMaxParticipants(),
                     e.getCategory() != null ? e.getCategory().getName() : null,
                     e.getDescription(),
+                    e.getServer(),
                     e.getRewardStrategy(),
                     tcDto
             );
@@ -145,6 +147,7 @@ public class StorageManager {
             event.setMinParticipants(minParticipants);
             event.setMaxParticipants(maxParticipants);
             event.setDescription(description);
+            if (server != null) event.setServer(server);
             event.setRewardStrategy(reward);
             if (category != null) categoryManager.get(category).ifPresent(event::setCategory);
             if (teamConfig != null) {
