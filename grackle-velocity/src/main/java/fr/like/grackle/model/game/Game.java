@@ -3,10 +3,11 @@ package fr.like.grackle.model.game;
 import fr.like.grackle.model.event.Event;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
 
-    private static int idCounter = 0;
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     private final int id;
     private final Event event;
@@ -16,7 +17,7 @@ public class Game {
     private final Map<String, GameTeam> teams = new LinkedHashMap<>();
 
     public Game(Event event) {
-        this.id = ++idCounter;
+        this.id = idCounter.incrementAndGet();
         this.event = event;
         this.status = GameStatus.WAITING;
     }

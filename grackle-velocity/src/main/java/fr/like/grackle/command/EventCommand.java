@@ -15,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * /event create <nom> <solo|team> [options...]
+ * /grackle-event create <nom> <solo|team> [options...]
  * /event list
- * /event info <nom>
- * /event delete <nom>
+ * /grackle-event info <nom>
+ * /grackle-event delete <nom>
  *
  * Options pour solo  : --mode <ranked|participation> --max <n> --range <n> --participation <n>
  * Options pour team  : --teams <n> --random --max <n> --range <n> --participation <n>
@@ -60,7 +60,7 @@ public class EventCommand implements SimpleCommand {
 
     private void handleCreate(CommandSource src, String[] args) {
         if (args.length < 3) {
-            src.sendMessage(Component.text("Usage: /event create <nom> <solo|team> [options]", NamedTextColor.RED));
+            src.sendMessage(Component.text("Usage: /grackle-event create <nom> <solo|team> [options]", NamedTextColor.RED));
             return;
         }
 
@@ -151,7 +151,7 @@ public class EventCommand implements SimpleCommand {
     }
 
     private void handleInfo(CommandSource src, String[] args) {
-        if (args.length < 2) { src.sendMessage(Component.text("Usage: /event info <nom>", NamedTextColor.RED)); return; }
+        if (args.length < 2) { src.sendMessage(Component.text("Usage: /grackle-event info <nom>", NamedTextColor.RED)); return; }
         eventManager.get(args[1]).ifPresentOrElse(e -> {
             src.sendMessage(Component.text("=== " + e.getName() + " ===", NamedTextColor.GOLD));
             src.sendMessage(Component.text("Type : " + e.getType(), NamedTextColor.WHITE));
@@ -165,7 +165,7 @@ public class EventCommand implements SimpleCommand {
     }
 
     private void handleDelete(CommandSource src, String[] args) {
-        if (args.length < 2) { src.sendMessage(Component.text("Usage: /event delete <nom>", NamedTextColor.RED)); return; }
+        if (args.length < 2) { src.sendMessage(Component.text("Usage: /grackle-event delete <nom>", NamedTextColor.RED)); return; }
         if (eventManager.remove(args[1])) {
             plugin.save();
             src.sendMessage(Component.text("Event '" + args[1] + "' supprimé.", NamedTextColor.GREEN));
@@ -185,8 +185,8 @@ public class EventCommand implements SimpleCommand {
     }
 
     private void sendHelp(CommandSource src) {
-        src.sendMessage(Component.text("/event create <nom> <solo|team> [options]", NamedTextColor.YELLOW));
-        src.sendMessage(Component.text("/event list | info <nom> | delete <nom>", NamedTextColor.YELLOW));
+        src.sendMessage(Component.text("/grackle-event create <nom> <solo|team> [options]", NamedTextColor.YELLOW));
+        src.sendMessage(Component.text("/grackle-event list | info <nom> | delete <nom>", NamedTextColor.YELLOW));
         src.sendMessage(Component.text("Options: --min --max-players --category --desc", NamedTextColor.GRAY));
         src.sendMessage(Component.text("Solo: --mode <ranked|participation> --max --range --participation", NamedTextColor.GRAY));
         src.sendMessage(Component.text("Team: --teams --random --winner --loser | --max --range --participation", NamedTextColor.GRAY));

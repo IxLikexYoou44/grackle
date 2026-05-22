@@ -20,8 +20,8 @@ Les téléportations (spawn de départ, retour) et l'hébergement des parties (s
 ---
 
 ## Exigences
-- Java 17+ (compilation et runtime)
-- Velocity proxy (plugin `grackle`)
+- Java 21+ (compilation et runtime)
+- Velocity proxy (plugin `grackle-velocity`)
 - Paper/Spigot backends (plugin `grackle-paper`)
 - (Optionnel mais recommandé) LuckPerms pour la gestion de tags d'équipes
 
@@ -32,80 +32,189 @@ Les données sont sauvegardées dans le dossier `plugins/grackle/` sur le proxy 
 
 La sauvegarde est automatique à chaque création/suppression et au shutdown du proxy.
 
+> **Note :** les IDs de parties sont générés de façon incrémentale et remis à zéro au redémarrage du proxy. Ne pas s'appuyer dessus comme identifiant persistant.
+
 ---
 
-## Commandes (Paper/backends)
+## Commandes — côté proxy (Velocity)
+
+Ces commandes sont disponibles dans la console Velocity ou pour un joueur ayant les permissions appropriées :
+
+| Commande | Alias | Permission | Description |
+|---|---|---|---|
+| `/grackle` | `/gk` | `grackle.admin` | Gestion des parties |
+| `/grackle-event` | `/gkevent` | `grackle.event` | Créer/supprimer des events |
+| `/grackle-category` | `/gkcat` | `grackle.category` | Créer/supprimer des catégories |
+
+Usage (proxy) :
+- `/grackle start <eventName> [serverName]`
+- `/grackle join <gameId>`
+- `/grackle leave <gameId>`
+- `/grackle startGame <gameId>`
+- `/grackle refreshTeams <gameId>`
+- `/grackle end <gameId>`
+- `/grackle setPosition <gameId> <nom> <position>`
+- `/grackle status <gameId>`
+- `/grackle-event create <nom> <solo|team> [options]`
+- `/grackle-event list | info <nom> | delete <nom>`
+- `/grackle-category create <nom> [description]`
+- `/grackle-category list | delete <nom>`
+
+---
+
+## Commandes — côté Paper (backends)
+
 Pour éviter les collisions avec d'autres plugins, les commandes Paper ont été namespacées :
-- `/grackle` (alias `/gk`) — ouvre l'UI
-- `/grackle-event` (alias `gkevent`) — gestion des events (create/list/info/delete)
-- `/grackle-category` (alias `gkcategory`) — gestion des catégories (create/list/delete)
+- `/grackle` (alias `/gk`) — ouvre l'UI inventaire
+- `/grackle-event` (alias `/gkevent`) — gestion des events (create/list/info/delete)
+- `/grackle-category` (alias `/gkcategory`) — gestion des catégories (create/list/delete)
 
-Usage rapide (Paper):
-- `/grackle-event create <name> <solo|team> [options]`
+Ces commandes sont transmises au proxy via le plugin messaging channel `grackle:main`.
+
+Usage (Paper) :
+- `/grackle-event create <nom> <solo|team> [options]`
 - `/grackle-event list`
-- `/grackle-event info <name>`
-- `/grackle-event delete <name>`
-- `/grackle-category create <name> [description]`
+- `/grackle-event info <nom>`
+- `/grackle-event delete <nom>`
+- `/grackle-category create <nom> [description]`
 - `/grackle-category list`
-- `/grackle-category delete <name>`
+- `/grackle-category delete <nom>`
 
-Permissions:
-- `grackle.ui` — ouvrir UI
-- `grackle.event` — créer/supprimer events
-- `grackle.category` — créer/supprimer catégories
+Permissions :
+- `grackle.ui` — ouvrir l'UI inventaire
+- `grackle.event` — créer/supprimer des events
+- `grackle.category` — créer/supprimer des catégories
 
 ---
 
-## Tab-completion améliorée
+## Options de création d'événement
+
+Options communes :
+- `--min <n>` — nombre minimum de participants (défaut : 2)
+- `--max-players <n>` — nombre maximum de participants (`-1` = illimité)
+- `--category <nom>` — catégorie de l'event
+- `--desc <texte>` — description
+- `--server <nom>` — serveur backend préféré pour héberger cet event
+
+Options solo :
+- `--mode <ranked|participation>` — mode de récompense (défaut : `ranked`)
+- `--max <n>` — récompense maximale (1er)
+- `--range <n>` — décrémentation par position
+- `--participation <n>` — récompense minimale garantie
+
+Options team :
+- `--teams <n>` — nombre d'équipes (défaut : 2)
+- `--random` — affectation aléatoire aux équipes
+- `--winner <n>` — points pour l'équipe gagnante (TeamReward)
+- `--loser <n>` — points pour les équipes perdantes (TeamReward)
+- Ou `--max`/`--range`/`--participation` pour un DegressiveReward par équipe
+
+---
+
+## Tab-completion améliorée (Paper)
 - TAB propose les sous-commandes (`create`, `list`, `info`, `delete`).
-- Pour `create` : la 3ème position propose `--category`, `--desc`, `--min`, `--max-players`, `--mode`, `--teams`, `--random`, `--winner`, `--loser`, `--range`, `--participation`.
-- Après `--category`, TAB propose les catégories existantes (cache du backend).
-- Les listes d'événements et catégories proviennent du cache synchronisé via le canal plugin messaging (STATE_RESPONSE / STATE_UPDATE).
+- Pour `create` : la 3ème position propose `solo` ou `team`.
+- Après `delete` / `info` : TAB propose les noms d'events ou de catégories existants (depuis le cache synchronisé via `STATE_RESPONSE` / `STATE_UPDATE`).
 
 ---
 
 ## Mini-jeux — intégration et pratiques recommandées
-1. Teleport / Zone de jeu
-   - Grackle ne téléporte pas automatiquement. Lorsqu'une partie démarre, utilisez un listener serveur/back-end ou un plugin dédié qui écoute l'événement (ou le message via le canal interne) et téléporte les joueurs vers la zone de jeu.
-   - Possibilité : créer un handler dans votre backend qui, à la réception d'un `ACTION_RESULT` indiquant `START_GAME`, exécute la logique de téléportation et change le monde si nécessaire.
 
-2. Changement de serveur (proxy)
-   - Pour des parties isolées, déplacez les joueurs vers un serveur dédié via l'API du proxy (Velocity: `player.createConnectionRequest(...)`). Grackle n'effectue pas le transfert automatiquement mais fournit l'ID de la partie et les métadonnées nécessaires.
+### 1. Téléportation / zone de jeu
+Grackle ne téléporte pas automatiquement. Lorsqu'une partie démarre, utilisez un listener côté backend qui écoute l'`ACTION_RESULT` avec `START_GAME` et exécute la logique de téléportation.
 
-3. Compatibilité avec d'autres plugins de minijeux
-   - Grackle fournit métadonnées (events, teams, récompenses). Intégrer Grackle avec un plugin de minijeu implique généralement :
-     - Recevoir la notification de création/démarrage de partie
-     - Gérer la création d'une instance du jeu (map, zone)
-     - Gérer la téléportation et le swap de serveur
-     - Après fin de partie, appeler `/grackle end <gameId>` ou envoyer l'action équivalente via messaging
-   - Recommandations :
-     - Utilisez LuckPerms pour tags/permissions si vous comptez mapper des tags à des équipes.
-     - Nommez vos commandes pour éviter collisions (c'est pourquoi Paper utilise `grackle-event` / `grackle-category`).
+### 2. Changement de serveur (proxy)
+Pour des parties isolées, déplacez les joueurs vers un serveur dédié via l'API Velocity (`player.createConnectionRequest(...)`). Vous pouvez renseigner le champ `server` sur l'event (option `--server` à la création) : Grackle transfèrera automatiquement le joueur initiateur vers ce serveur au démarrage de la partie.
 
-4. Exemple d'intégration simple (pseudo)
+### 3. Compatibilité avec d'autres plugins de minijeux
+Grackle fournit métadonnées (events, teams, récompenses). Intégrer Grackle avec un plugin de minijeu implique généralement :
+- Recevoir la notification de création/démarrage de partie
+- Gérer la création d'une instance du jeu (map, zone)
+- Gérer la téléportation et le swap de serveur
+- Après fin de partie, appeler `/grackle end <gameId>` ou envoyer l'action `END_GAME` via messaging
+
+Recommandations :
+- Utilisez LuckPerms pour tags/permissions si vous comptez mapper des tags à des équipes (l'intégration côté Velocity est prévue dans `GameManager.playerHasTag`).
+- Nommez vos commandes pour éviter collisions (c'est pourquoi Paper utilise `grackle-event` / `grackle-category`).
+
+### 4. Exemple d'intégration simple
 ```java
-// Backend listener: quand l'utilisateur clique "Lancer une partie" dans l'UI
-plugin.getMessagingHandler().requestState(player); // already done by UI
-// Paper UI includes an optional 'server' field on the event JSON; when present the proxy will
-// forward the initiating player to that server on START_GAME. Alternatively, you can run
-// on the proxy: /grackle start <eventName> <serverName> to create a game and move the command player.
+// Paper : quand le joueur clique "Lancer" dans l'UI, le plugin envoie automatiquement START_GAME.
+// Velocity : si l'event a un champ "server", le joueur est transféré automatiquement.
 
-// Example (Velocity side):
-proxy.getPlayer(uuid).ifPresent(p -> p.createConnectionRequest(targetServer).connect());
+// Pour forcer le transfert côté Velocity via commande :
+// /grackle start <eventName> <serverName>
 ```
 
 ---
 
 ## Dépannage rapide
-- Si les commandes ne répondent pas, vérifiez collisions de noms (utilisez `/grackle-event` au lieu de `/event`).
+- Si les commandes ne répondent pas, vérifiez les collisions de noms (utilisez `/grackle-event` au lieu de `/event`).
 - Assurez-vous que la communication plugin messaging est autorisée et que les canaux sont enregistrés côté proxy et backend.
 - Vérifiez que le proxy a les permissions d'écriture pour `plugins/grackle/`.
+- Si le cache Paper est vide après connexion, vérifiez que le canal `grackle:main` est bien enregistré des deux côtés et que le délai de 1 seconde au `PlayerJoin` est suffisant (augmentez le `runTaskLater` si nécessaire).
 
 ---
 
-## Exemple `events.json` et `categories.json`
-(identiques aux exemples fournis dans la documentation du code). 
+## Exemples JSON
 
----
+### `categories.json`
+```json
+[
+  {
+    "name": "PvP",
+    "description": "Événements de combat entre joueurs"
+  },
+  {
+    "name": "Aventure",
+    "description": null
+  }
+]
+```
 
-Besoin d'exemples concrets de code pour téléporter / changer de serveur automatiquement après le START_GAME ? Dites "Oui" et je fournis un exemple minimal pour Velocity + Paper.
+### `events.json`
+```json
+[
+  {
+    "name": "BedWars",
+    "type": "TEAM",
+    "soloMode": null,
+    "minParticipants": 4,
+    "maxParticipants": 16,
+    "category": "PvP",
+    "description": "Détruisez le lit adverse et éliminez les équipes.",
+    "server": "minigames-1",
+    "reward": {
+      "type": "TEAM",
+      "winner": 10,
+      "loser": 2
+    },
+    "teamConfig": {
+      "teamCount": 4,
+      "randomTeams": false,
+      "fixedTeamSizes": {},
+      "teamTags": {
+        "grackle_team_red": "Red",
+        "grackle_team_blue": "Blue"
+      }
+    }
+  },
+  {
+    "name": "Spleef",
+    "type": "SOLO",
+    "soloMode": "RANKED",
+    "minParticipants": 2,
+    "maxParticipants": 8,
+    "category": "PvP",
+    "description": "Le dernier survivant gagne.",
+    "server": null,
+    "reward": {
+      "type": "DEGRESSIVE",
+      "max": 10,
+      "range": 2,
+      "participation": 1
+    },
+    "teamConfig": null
+  }
+]
+```

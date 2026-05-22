@@ -1,7 +1,5 @@
 package fr.like.grackle.model.reward;
 
-import java.util.List;
-
 public interface RewardStrategy {
     /**
      * Returns the points for a given position (1-based).

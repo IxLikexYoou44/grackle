@@ -51,7 +51,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         String cmd = command.getName().toLowerCase();
-        getLogger().info("GrackleUI.onCommand invoked by {} for command '{}' with args={}", sender.getName(), cmd, java.util.Arrays.toString(args));
+        getLogger().info("GrackleUI.onCommand invoked by " + sender.getName() + " for command '" + cmd + "' with args=" + java.util.Arrays.toString(args));
 
         // /grackle - opens UI (existing behavior)
         if (cmd.equals("grackle") || cmd.equals("gk")) {
@@ -71,7 +71,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
             if (consumer != null) consumer.accept(p);
             msg.add("params", p);
             String json = new com.google.gson.Gson().toJson(msg);
-            getLogger().info("Sending plugin message to proxy: {}", json);
+            getLogger().info("Sending plugin message to proxy: " + json);
             getServer().sendPluginMessage(this, PaperMessagingHandler.CHANNEL, json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             sender.sendMessage("Requête envoyée au proxy.");
         };
@@ -85,7 +85,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
                     if (args.length < 2) { sender.sendMessage("Usage: /category create <nom> [description]"); return true; }
                     String name = args[1];
                     String desc = args.length >= 3 ? String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length)) : "";
-                    getLogger().info("Forwarding CATEGORY_CREATE name='{}' desc='{}' from {}", name, desc, sender.getName());
+                    getLogger().info("Forwarding CATEGORY_CREATE name='" + name + "' desc='" + desc + "' from " + sender.getName());
                     if (sender instanceof Player player) {
                         messagingHandler.sendAction(player, "CATEGORY_CREATE", obj -> { obj.addProperty("name", name); obj.addProperty("description", desc); });
                     } else {
@@ -95,7 +95,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
                 case "delete" -> {
                     if (args.length < 2) { sender.sendMessage("Usage: /category delete <nom>"); return true; }
                     String name = args[1];
-                    getLogger().info("Forwarding CATEGORY_DELETE name='{}' from {}", name, sender.getName());
+                    getLogger().info("Forwarding CATEGORY_DELETE name='" + name + "' from " + sender.getName());
                     if (sender instanceof Player player) {
                         messagingHandler.sendAction(player, "CATEGORY_DELETE", obj -> obj.addProperty("name", name));
                     } else {
@@ -121,7 +121,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
                     String name = args[1];
                     String type = args[2].toUpperCase();
                     String[] options = args.length > 3 ? java.util.Arrays.copyOfRange(args, 3, args.length) : new String[0];
-                    getLogger().info("Forwarding EVENT_CREATE name='{}' type='{}' options={} from {}", name, type, java.util.Arrays.toString(options), sender.getName());
+                    getLogger().info("Forwarding EVENT_CREATE name='" + name + "' type='" + type + "' options=" + java.util.Arrays.toString(options) + " from " + sender.getName());
                     if (sender instanceof Player player) {
                         messagingHandler.sendAction(player, "EVENT_CREATE", obj -> {
                             obj.addProperty("name", name);
@@ -143,7 +143,7 @@ public class GrackleUI extends JavaPlugin implements CommandExecutor, TabComplet
                 case "delete" -> {
                     if (args.length < 2) { sender.sendMessage("Usage: /event delete <nom>"); return true; }
                     String name = args[1];
-                    getLogger().info("Forwarding EVENT_DELETE name='{}' from {}", name, sender.getName());
+                    getLogger().info("Forwarding EVENT_DELETE name='" + name + "' from " + sender.getName());
                     if (sender instanceof Player player) {
                         messagingHandler.sendAction(player, "EVENT_DELETE", obj -> obj.addProperty("name", name));
                     } else {

@@ -70,8 +70,26 @@ public class VelocityMessagingHandler {
             return;
         }
 
-        MessageType type = MessageType.valueOf(msg.get("type").getAsString());
-        UUID playerId = UUID.fromString(msg.get("playerId").getAsString());
+        if (!msg.has("type") || !msg.has("playerId")) {
+            logger.warn("Message plugin incomplet (type/playerId manquant) : {}", raw);
+            return;
+        }
+
+        MessageType type;
+        try {
+            type = MessageType.valueOf(msg.get("type").getAsString());
+        } catch (IllegalArgumentException e) {
+            logger.warn("Type de message inconnu : {}", msg.get("type").getAsString());
+            return;
+        }
+
+        UUID playerId;
+        try {
+            playerId = UUID.fromString(msg.get("playerId").getAsString());
+        } catch (IllegalArgumentException e) {
+            logger.warn("playerId invalide : {}", msg.get("playerId").getAsString());
+            return;
+        }
 
         switch (type) {
             case REQUEST_STATE -> sendState(server, playerId);
@@ -199,10 +217,10 @@ public class VelocityMessagingHandler {
                     params.getAsJsonArray("options").forEach(el -> options.add(el.getAsString()));
                 }
                 if (name.isEmpty() || typeStr.isEmpty()) { replyError(server, playerId, "Nom/type manquant pour l'event."); return; }
-                EventType type;
-                try { type = EventType.valueOf(typeStr.toUpperCase()); } catch (IllegalArgumentException e) { replyError(server, playerId, "Type d'event invalide."); return; }
+                EventType eventType;
+                try { eventType = EventType.valueOf(typeStr.toUpperCase()); } catch (IllegalArgumentException e) { replyError(server, playerId, "Type d'event invalide."); return; }
                 if (eventManager.get(name).isPresent()) { replyError(server, playerId, "Un event avec ce nom existe déjà."); return; }
-                Event event = new Event(name, type);
+                Event event = new Event(name, eventType);
                 // Parse options similarly à EventCommand
                 try {
                     parseOptionsForEvent(event, options.toArray(new String[0]));
@@ -212,11 +230,11 @@ public class VelocityMessagingHandler {
                 }
                 // Defaults
                 if (event.getRewardStrategy() == null) {
-                    if (type == EventType.TEAM) event.setRewardStrategy(new TeamReward(3,1));
+                    if (eventType == EventType.TEAM) event.setRewardStrategy(new TeamReward(3,1));
                     else event.setRewardStrategy(new DegressiveReward(5,1,1));
                 }
-                if (type == EventType.SOLO && event.getSoloMode() == null) event.setSoloMode(SoloMode.RANKED);
-                if (type == EventType.TEAM && event.getTeamConfig() == null) event.setTeamConfig(new TeamConfig(2, false, Map.of(), Map.of()));
+                if (eventType == EventType.SOLO && event.getSoloMode() == null) event.setSoloMode(SoloMode.RANKED);
+                if (eventType == EventType.TEAM && event.getTeamConfig() == null) event.setTeamConfig(new TeamConfig(2, false, Map.of(), Map.of()));
 
                 eventManager.register(event);
                 plugin.save();
@@ -258,7 +276,8 @@ public class VelocityMessagingHandler {
             switch (args[i].toLowerCase()) {
                 case "--mode"         -> { if (++i < args.length) event.setSoloMode(SoloMode.valueOf(args[i].toUpperCase())); }
                 case "--min"          -> { if (++i < args.length) event.setMinParticipants(Integer.parseInt(args[i])); }
-                case "--max-players", "--max"  -> { if (++i < args.length) event.setMaxParticipants(args[i].equals("-1") ? Integer.MAX_VALUE : Integer.parseInt(args[i])); }
+                case "--max-players"  -> { if (++i < args.length) event.setMaxParticipants(args[i].equals("-1") ? Integer.MAX_VALUE : Integer.parseInt(args[i])); }
+                case "--max"          -> { if (++i < args.length) rewardMax = Integer.parseInt(args[i]); }
                 case "--category"     -> { if (++i < args.length) categoryManager.get(args[i]).ifPresent(event::setCategory); }
                 case "--desc"         -> { if (++i < args.length) event.setDescription(args[i]); }
                 case "--server"       -> { if (++i < args.length) event.setServer(args[i]); }
@@ -324,7 +343,7 @@ public class VelocityMessagingHandler {
             o.addProperty("type", e.getType().name());
             o.addProperty("minParticipants", e.getMinParticipants());
             o.addProperty("maxParticipants", e.getMaxParticipants() == Integer.MAX_VALUE ? -1 : e.getMaxParticipants());
-            o.addProperty("reward", e.getRewardStrategy().describe());
+            o.addProperty("reward", e.getRewardStrategy() != null ? e.getRewardStrategy().describe() : "");
             o.addProperty("soloMode", e.getSoloMode() != null ? e.getSoloMode().name() : "");
             o.addProperty("category", e.getCategory() != null ? e.getCategory().getName() : "");
             o.addProperty("description", e.getDescription() != null ? e.getDescription() : "");

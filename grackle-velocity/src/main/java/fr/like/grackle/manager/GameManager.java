@@ -21,7 +21,7 @@ public class GameManager {
     public Game createGame(Event event) {
         Game game = new Game(event);
 
-        if (event.getType() == EventType.TEAM) {
+        if (event.getType() == EventType.TEAM && event.getTeamConfig() != null) {
             TeamConfig cfg = event.getTeamConfig();
             cfg.getTeamTags().values().stream()
                     .distinct()

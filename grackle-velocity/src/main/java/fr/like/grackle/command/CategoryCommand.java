@@ -11,9 +11,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import java.util.List;
 
 /**
- * /category create <nom>
- * /category list
- * /category delete <nom>
+ * /grackle-category create <nom>
+ * /grackle-category list
+ * /grackle-category delete <nom>
  */
 public class CategoryCommand implements SimpleCommand {
 
@@ -31,13 +31,13 @@ public class CategoryCommand implements SimpleCommand {
         String[] args = inv.arguments();
 
         if (args.length == 0) {
-            src.sendMessage(Component.text("Usage: /category <create|list|delete> [nom]", NamedTextColor.YELLOW));
+            src.sendMessage(Component.text("Usage: /grackle-category <create|list|delete> [nom]", NamedTextColor.YELLOW));
             return;
         }
 
         switch (args[0].toLowerCase()) {
             case "create" -> {
-                if (args.length < 2) { src.sendMessage(Component.text("Usage: /category create <nom>", NamedTextColor.RED)); return; }
+                if (args.length < 2) { src.sendMessage(Component.text("Usage: /grackle-category create <nom>", NamedTextColor.RED)); return; }
                 String name = args[1];
                 if (categoryManager.exists(name)) {
                     src.sendMessage(Component.text("La catégorie '" + name + "' existe déjà.", NamedTextColor.RED));
@@ -57,7 +57,7 @@ public class CategoryCommand implements SimpleCommand {
                         src.sendMessage(Component.text("- " + c.getName(), NamedTextColor.AQUA)));
             }
             case "delete" -> {
-                if (args.length < 2) { src.sendMessage(Component.text("Usage: /category delete <nom>", NamedTextColor.RED)); return; }
+                if (args.length < 2) { src.sendMessage(Component.text("Usage: /grackle-category delete <nom>", NamedTextColor.RED)); return; }
                 if (categoryManager.remove(args[1])) {
                     plugin.save();
                     src.sendMessage(Component.text("Catégorie '" + args[1] + "' supprimée.", NamedTextColor.GREEN));

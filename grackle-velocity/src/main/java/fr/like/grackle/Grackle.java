@@ -89,10 +89,10 @@ public class Grackle {
         CommandMeta grackle = cm.metaBuilder("grackle").aliases("gk").plugin(this).build();
         cm.register(grackle, new GrackleCommand(proxy, eventManager, gameManager));
 
-        CommandMeta eventCmd = cm.metaBuilder("event").aliases("ev").plugin(this).build();
+        CommandMeta eventCmd = cm.metaBuilder("grackle-event").aliases("gkevent").plugin(this).build();
         cm.register(eventCmd, new EventCommand(eventManager, categoryManager, this));
 
-        CommandMeta categoryCmd = cm.metaBuilder("category").aliases("cat").plugin(this).build();
+        CommandMeta categoryCmd = cm.metaBuilder("grackle-category").aliases("gkcat").plugin(this).build();
         cm.register(categoryCmd, new CategoryCommand(categoryManager, this));
     }
 }
